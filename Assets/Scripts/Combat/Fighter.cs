@@ -3,16 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using RPG.Movement;
 using RPG.Core;
+using System;
+using RPG.Resources;
 
 namespace RPG.Combat
 {
     public class Fighter : MonoBehaviour, IAction
     {
         Health target;
-        [SerializeField] float weaponRange = 2.0f;
+        
         [SerializeField] float timeBetweenAttacks = 1f;
-        [SerializeField] float weaponDamage = 5f;
+        
+        [SerializeField] Transform handTransform = null;
+        [SerializeField] Weapon defaultWeapon = null;
+        
         float timeLastAttack = Mathf.Infinity;
+        Weapon currentWeapon = null;
+
+        private void Start()
+        {
+            EquipWeapon(defaultWeapon);
+        }
+
+
         private void Update()
         {
             timeLastAttack += Time.deltaTime; 
@@ -31,6 +44,12 @@ namespace RPG.Combat
 
         }
 
+        public void EquipWeapon(Weapon weapon)
+        {
+            currentWeapon = weapon;
+            Animator animator = GetComponent<Animator>();
+            weapon.Spawn(handTransform, animator);
+        }
         private void AttackBehaviour()
         {
             transform.LookAt(target.transform);
@@ -56,7 +75,7 @@ namespace RPG.Combat
             {
                 return; 
             }
-            target.TakeDamge(weaponDamage);
+            target.TakeDamge(currentWeapon.GetDamage());
         }
         //Animation Event
         public bool CanAttack(GameObject combatTarget)
@@ -70,7 +89,7 @@ namespace RPG.Combat
         }
         private bool GetIsInRange()
         {
-            return Vector3.Distance(transform.position, target.transform.position) < weaponRange;
+            return Vector3.Distance(transform.position, target.transform.position) < currentWeapon.GetRange();
         }
 
         public void Attack(GameObject combatTarget)
@@ -79,6 +98,10 @@ namespace RPG.Combat
             target = combatTarget.GetComponent<Health>();
         }
 
+        public Health GetTarget()
+        {
+            return target;
+        }
         public void Cancel()
         {
             StopAttack();
