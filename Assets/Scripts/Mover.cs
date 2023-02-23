@@ -4,11 +4,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using RPG.Saving;
 
 
 namespace RPG.Movement
 {
-    public class Mover : MonoBehaviour, IAction
+    public class Mover : MonoBehaviour, IAction, ISaveable
     {
         [SerializeField] Transform target;
         [SerializeField] float maxSpeed = 10f;
@@ -53,6 +54,28 @@ namespace RPG.Movement
             float speed = localVelocity.z;
             GetComponent<Animator>().SetFloat("forwardSpeed", speed);
         }
+        [System.Serializable]
+        struct MoverSaveDate
+        {
+            public SerializableVector3 position;
+            public SerializableVector3 rotation;
+        }
+        public object CaptureState()
+        {
+            MoverSaveDate data = new MoverSaveDate();
+            data.position = new SerializableVector3(transform.position);
+            data.rotation = new SerializableVector3(transform.eulerAngles);
+            return data;
+        }
+        public void RestoreState(object state)
+        {
+            MoverSaveDate data = (MoverSaveDate)state;
+            GetComponent<NavMeshAgent>().enabled = false;
+            transform.position = data.position.ToVector();
+            transform.eulerAngles = data.rotation.ToVector();
+            GetComponent<NavMeshAgent>().enabled = true;
+        }
+
     }
 
     
